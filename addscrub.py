@@ -19,8 +19,7 @@ def add_scrub_tier():
             inside_personal = False
             for index, line in enumerate(input):
                 buffer = shift_line_buffer(buffer, line)
-                if inside_personal:
-                    scrub_buffer.append(line)
+
                 if (line.startswith("%com:") or\
                     line.startswith("%xcom:"))\
                     and "personal" in line:
@@ -29,17 +28,21 @@ def add_scrub_tier():
 
                         if "begin" in line or "end" not in line:
                             begin_time = find_last_timestamp(buffer)
-                            print "begin_time: {}".format(begin_time)
+                            print "BEGIN_TIME: {}".format(begin_time)
                             scrub_buffer.append("TEMPORARY SCRUB")
                             inside_personal = True
                         if "end" in line:
                             end_time = find_last_timestamp(buffer)
-                            print "end_time: {}".format(end_time)
+                            print "END_TIME: {}".format(end_time)
                             fix_scrub_buffer(scrub_buffer, begin_time, end_time)
                             for line in scrub_buffer:
                                 output.write(line)
                             inside_personal = False
                             scrub_buffer = []
+
+                if inside_personal:
+                    scrub_buffer.append(line)
+                    #continue
                 else:
                     output.write(line)
 
@@ -60,7 +63,8 @@ def fix_scrub_buffer(buffer, begin_time, end_time):
     end_split = end_time.split("_")
 
     if buffer[1] == "TEMPORARY SCRUB":
-        buffer[1] = "*SCR:\tScrub {}_{}\n".format(begin_split[1], end_split[1])
+        buffer[1] = "*SCR:\tScrub {}_{}\n".format(begin_split[1],
+                                                  end_split[1])
     else:
         print "Something wrong with personal info in this file.....\n"
         print "Timestamp: {}\n".format(begin_time)
