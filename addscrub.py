@@ -12,32 +12,67 @@ def add_scrub_tier():
         with open(output_file, "wb") as output:
             begin_time = ""
             end_time = ""
-            buffer = [None, None, None, None, None]
 
-            for line in input:
-                shift_line_buffer(buffer, line)
-                if (line.startswith("%com:") or line.startswith("%xcom:"))\
+            buffer = [""]*7
+            scrub_buffer = []
+
+            inside_personal = False
+            for index, line in enumerate(input):
+                buffer = shift_line_buffer(buffer, line)
+                if inside_personal:
+                    scrub_buffer.append(line)
+                if (line.startswith("%com:") or\
+                    line.startswith("%xcom:"))\
                     and "personal" in line:
-                        print line
+
+                        scrub_buffer.append(line)
+
+                        if "begin" in line or "end" not in line:
+                            begin_time = find_last_timestamp(buffer)
+                            print "begin_time: {}".format(begin_time)
+                            scrub_buffer.append("TEMPORARY SCRUB")
+                            inside_personal = True
+                        if "end" in line:
+                            end_time = find_last_timestamp(buffer)
+                            print "end_time: {}".format(end_time)
+                            fix_scrub_buffer(scrub_buffer, begin_time, end_time)
+                            for line in scrub_buffer:
+                                output.write(line)
+                            inside_personal = False
+                            scrub_buffer = []
                 else:
                     output.write(line)
 
 def shift_line_buffer(buffer, newline):
     for index, line in enumerate(buffer):
         if index == 0: continue
-        if index == len(buffer):
+        if index == len(buffer)-1:
+            buffer[index-1] = buffer[index]
             buffer[index] = newline
             return buffer
         buffer[index-1] = buffer[index]
 
+def fix_scrub_buffer(buffer, begin_time, end_time):
+    if buffer[-1] == buffer[-2]:
+        del buffer[-1]
+
+    begin_split = begin_time.split("_")
+    end_split = end_time.split("_")
+
+    if buffer[1] == "TEMPORARY SCRUB":
+        buffer[1] = "*SCR:\tScrub {}_{}\n".format(begin_split[1], end_split[1])
+    else:
+        print "Something wrong with personal info in this file.....\n"
+        print "Timestamp: {}\n".format(begin_time)
+
 def find_last_timestamp(buffer):
     for line in reversed(buffer):
-        interval_regx_result = interval_regx.search(line)
-        if not interval_regx_result:
+        regx_result = interval_regx.search(line)
+        if not regx_result:
             continue
         else:
-            temp_interval_string = interval_regx_result.group()\
-                                                       .replace("\025", "")
+            temp_interval_string = regx_result.group()\
+                                              .replace("\025", "")
             return temp_interval_string
 
 
