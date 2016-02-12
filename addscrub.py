@@ -16,35 +16,36 @@ def add_scrub_tier():
             buffer = [""]*7
             scrub_buffer = []
 
+            filling_scrubbuffer = False
             inside_personal = False
+
             for index, line in enumerate(input):
                 buffer = shift_line_buffer(buffer, line)
-
+                if inside_personal:
+                    scrub_buffer.append(line)
                 if (line.startswith("%com:") or\
                     line.startswith("%xcom:"))\
                     and "personal" in line:
-
+                        filling_scrubbuffer = True
                         scrub_buffer.append(line)
 
                         if "begin" in line or "end" not in line:
                             begin_time = find_last_timestamp(buffer)
-                            print "BEGIN_TIME: {}".format(begin_time)
+                            #print "BEGIN_TIME: {}".format(begin_time)
                             scrub_buffer.append("TEMPORARY SCRUB")
                             inside_personal = True
                         if "end" in line:
                             end_time = find_last_timestamp(buffer)
-                            print "END_TIME: {}".format(end_time)
+                            #print "END_TIME: {}".format(end_time)
                             fix_scrub_buffer(scrub_buffer, begin_time, end_time)
                             for line in scrub_buffer:
                                 output.write(line)
                             inside_personal = False
                             scrub_buffer = []
-
-                if inside_personal:
-                    scrub_buffer.append(line)
-                    #continue
+                            filling_scrubbuffer = False
                 else:
-                    output.write(line)
+                    if not filling_scrubbuffer:
+                        output.write(line)
 
 def shift_line_buffer(buffer, newline):
     for index, line in enumerate(buffer):
@@ -66,7 +67,7 @@ def fix_scrub_buffer(buffer, begin_time, end_time):
         buffer[1] = "*SCR:\tScrub {}_{}\n".format(begin_split[1],
                                                   end_split[1])
     else:
-        print "Something wrong with personal info in this file.....\n"
+        print "Something wrong with personal info in this file:   {}\n".format(original_file)
         print "Timestamp: {}\n".format(begin_time)
 
 def find_last_timestamp(buffer):
@@ -86,5 +87,6 @@ if __name__ == "__main__":
     output_file = sys.argv[2]
 
     add_scrub_tier()
+    
 
 
