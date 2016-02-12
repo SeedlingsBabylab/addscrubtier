@@ -21,6 +21,8 @@ def add_scrub_tier():
 
             for index, line in enumerate(input):
                 buffer = shift_line_buffer(buffer, line)
+                if "Electronic_Sound_Far Media" in line:
+                    line = line.replace("\n", ", SCR\n\tScrubbed_Personal_Information\n")
                 if inside_personal:
                     scrub_buffer.append(line)
                 if (line.startswith("%com:") or\
@@ -87,6 +89,3 @@ if __name__ == "__main__":
     output_file = sys.argv[2]
 
     add_scrub_tier()
-    
-
-
