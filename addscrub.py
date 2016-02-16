@@ -7,6 +7,7 @@ output_file = ""
 
 interval_regx = re.compile("(\x15\d+_\d+)")
 
+
 def add_scrub_tier():
     with open(original_file, "rU") as input:
         with open(output_file, "wb") as output:
