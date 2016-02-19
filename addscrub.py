@@ -89,4 +89,7 @@ if __name__ == "__main__":
     original_file = sys.argv[1]
     output_file = sys.argv[2]
 
-    add_scrub_tier()
+    try:
+        add_scrub_tier()
+    except Exception:
+        print "\n\n{} WAS PROBLEMATIC\n\n".format(original_file)
