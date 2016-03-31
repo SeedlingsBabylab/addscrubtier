@@ -67,7 +67,7 @@ def fix_scrub_buffer(buffer, begin_time, end_time):
     end_split = end_time.split("_")
 
     if buffer[1] == "TEMPORARY SCRUB":
-        buffer[1] = "*SCR:\tScrub {}_{}\n".format(begin_split[1],
+        buffer[1] = "*SCR:\tScrub \x15{}_{}\x15\n".format(begin_split[1],
                                                   end_split[1])
     else:
         print "Something wrong with personal info in this file:   {}\n".format(original_file)
